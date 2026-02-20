@@ -11,7 +11,6 @@ import PostDetail from './components/PostDetail';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
   const [punkOfDay, setPunkOfDay] = useState<any>(null);
@@ -23,11 +22,13 @@ export default function App() {
       .then(res => res.json())
       .then(data => {
         setUser(data);
-        setLoading(false);
         if (data) {
           const socket = io();
           socket.emit('authenticate', data.id);
         }
+      })
+      .catch(() => {
+        console.log('Not logged in or server unreachable');
       });
 
     fetch('/api/stats/punk-of-the-day')
@@ -49,8 +50,6 @@ export default function App() {
     await fetch('/api/logout', { method: 'POST' });
     setUser(null);
   };
-
-  if (loading) return <div className="h-screen flex items-centre justify-centre font-display text-4xl text-punk-pink animate-pulse">LOADING ANARCHY...</div>;
 
   return (
     <Router>
