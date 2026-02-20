@@ -14,6 +14,8 @@ export default function PostDetail({ user }: PostDetailProps) {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const blockedUsers = user?.blocked_users ? JSON.parse(user.blocked_users) : [];
+
   useEffect(() => {
     fetchPost();
   }, [id]);
@@ -89,8 +91,10 @@ export default function PostDetail({ user }: PostDetailProps) {
         )}
 
         <div className="space-y-4">
-          {post.comments.map((c: any) => (
-            <motion.div 
+          {post.comments
+            .filter((c: any) => !blockedUsers.includes(c.user_id))
+            .map((c: any) => (
+              <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               key={c.id} 

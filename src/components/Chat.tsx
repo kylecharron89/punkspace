@@ -16,6 +16,8 @@ export default function Chat({ user }: ChatProps) {
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const blockedUsers = user?.blocked_users ? JSON.parse(user.blocked_users) : [];
+
   useEffect(() => {
     fetch('/api/rooms')
       .then(res => res.json())
@@ -127,8 +129,10 @@ export default function Chat({ user }: ChatProps) {
 
         {/* Messages */}
         <div className="flex-grow overflow-y-auto p-4 space-y-4">
-          {messages.map((msg, idx) => (
-            <motion.div 
+          {messages
+            .filter(msg => !blockedUsers.includes(msg.user_id))
+            .map((msg, idx) => (
+              <motion.div 
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               key={msg.id || idx} 

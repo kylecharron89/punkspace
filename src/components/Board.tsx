@@ -13,6 +13,8 @@ export default function Board({ user }: BoardProps) {
   const [newPost, setNewPost] = useState({ title: '', content: '' });
   const [loading, setLoading] = useState(true);
 
+  const blockedUsers = user?.blocked_users ? JSON.parse(user.blocked_users) : [];
+
   useEffect(() => {
     fetchPosts();
   }, []);
@@ -90,8 +92,10 @@ export default function Board({ user }: BoardProps) {
         <div className="text-center py-12 text-2xl animate-pulse text-punk-yellow">READING THE WALLS...</div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {posts.map(post => (
-            <Link 
+          {posts
+            .filter(post => !blockedUsers.includes(post.user_id))
+            .map(post => (
+              <Link 
               key={post.id} 
               to={`/board/${post.id}`}
               className="punk-card hover:border-white transition-colors group"

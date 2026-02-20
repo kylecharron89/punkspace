@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogOut, MessageSquare, User, Layout, Skull, Menu, X } from 'lucide-react';
+import { LogOut, MessageSquare, User, Layout, Skull, Menu, X, Search } from 'lucide-react';
 import { io } from 'socket.io-client';
 import Auth from './components/Auth';
 import Chat from './components/Chat';
@@ -16,6 +16,9 @@ export default function App() {
   const [punkOfDay, setPunkOfDay] = useState<any>(null);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetch('/api/me')
@@ -49,6 +52,19 @@ export default function App() {
   const handleLogout = async () => {
     await fetch('/api/logout', { method: 'POST' });
     setUser(null);
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+    const data = await res.json();
+    setSearchResults(data);
   };
 
   return (
@@ -132,6 +148,52 @@ export default function App() {
                 {!user && (
                   <Link to="/auth" className="punk-button text-2xl px-8 py-4">ENTER THE ANARCHY</Link>
                 )}
+
+                {/* Search Bar */}
+                <div className="w-full max-w-xl mt-12">
+                  <form onSubmit={handleSearch} className="flex gap-2">
+                    <div className="relative flex-grow">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                      <input 
+                        type="text" 
+                        placeholder="SEARCH THE VOID FOR PUNKS..." 
+                        className="punk-input pl-10 w-full"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <button type="submit" className="punk-button px-6">SEARCH</button>
+                  </form>
+                  
+                  {isSearching && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 punk-card bg-zinc-900/80 border-punk-cyan text-left max-h-60 overflow-y-auto"
+                    >
+                      {searchResults.length > 0 ? (
+                        <div className="divide-y divide-zinc-800">
+                          {searchResults.map(r => (
+                            <Link 
+                              key={r.id} 
+                              to={`/profile/${r.username}`}
+                              className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                              onClick={() => { setSearchQuery(''); setIsSearching(false); }}
+                            >
+                              <img src={r.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${r.username}`} className="w-10 h-10 border border-punk-cyan" alt="avatar" />
+                              <div>
+                                <div className="font-bold text-white">{r.username}</div>
+                                <div className="text-[10px] text-zinc-500 truncate max-w-[200px]">{r.bio || 'STAY PUNK.'}</div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-zinc-500 italic">No punks found in the void.</div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mt-12">
                   <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">

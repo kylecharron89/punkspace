@@ -67,7 +67,9 @@ try {
     bio TEXT,
     profile_css TEXT,
     profile_html TEXT,
+    profile_song TEXT, -- Embed URL
     top_friends TEXT, -- JSON array of user IDs
+    blocked_users TEXT, -- JSON array of user IDs
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -189,13 +191,13 @@ app.post('/api/logout', (req, res) => {
 app.get('/api/me', (req, res) => {
   const userId = req.cookies.userId;
   if (!userId) return res.json(null);
-  const user: any = db.prepare('SELECT id, username, avatar_url FROM users WHERE id = ?').get(userId);
+  const user: any = db.prepare('SELECT id, username, avatar_url, top_friends, blocked_users FROM users WHERE id = ?').get(userId);
   res.json(user);
 });
 
 // Profiles
 app.get('/api/users/:username', (req, res) => {
-  const user: any = db.prepare('SELECT id, username, avatar_url, bio, profile_css, profile_html, top_friends, created_at FROM users WHERE username = ?').get(req.params.username);
+  const user: any = db.prepare('SELECT id, username, avatar_url, bio, profile_css, profile_html, profile_song, top_friends, created_at FROM users WHERE username = ?').get(req.params.username);
   if (!user) return res.status(404).json({ error: 'User not found' });
   
   // Fetch actual user data for top friends
@@ -236,11 +238,35 @@ app.post('/api/friends/top', authenticate, (req: any, res) => {
   res.json({ success: true, friends });
 });
 
+app.post('/api/friends/block', authenticate, (req: any, res) => {
+  const { blockId, action } = req.body; // action: 'block' or 'unblock'
+  const user: any = db.prepare('SELECT blocked_users FROM users WHERE id = ?').get(req.userId);
+  let blocked = user.blocked_users ? JSON.parse(user.blocked_users) : [];
+  
+  if (action === 'block') {
+    if (!blocked.includes(blockId)) {
+      blocked.push(blockId);
+    }
+  } else {
+    blocked = blocked.filter((id: number) => id !== blockId);
+  }
+  
+  db.prepare('UPDATE users SET blocked_users = ? WHERE id = ?').run(JSON.stringify(blocked), req.userId);
+  res.json({ success: true, blocked });
+});
+
 app.put('/api/profile', authenticate, (req: any, res) => {
-  const { bio, profile_css, profile_html, avatar_url } = req.body;
-  db.prepare('UPDATE users SET bio = ?, profile_css = ?, profile_html = ?, avatar_url = ? WHERE id = ?')
-    .run(bio, profile_css, profile_html, avatar_url, req.userId);
+  const { bio, profile_css, profile_html, avatar_url, profile_song } = req.body;
+  db.prepare('UPDATE users SET bio = ?, profile_css = ?, profile_html = ?, avatar_url = ?, profile_song = ? WHERE id = ?')
+    .run(bio, profile_css, profile_html, avatar_url, profile_song, req.userId);
   res.json({ success: true });
+});
+
+app.get('/api/search', (req, res) => {
+  const q = req.query.q || '';
+  const users = db.prepare('SELECT id, username, avatar_url, bio FROM users WHERE username LIKE ? LIMIT 20')
+    .all(`%${q}%`);
+  res.json(users);
 });
 
 app.get('/api/users', (req, res) => {

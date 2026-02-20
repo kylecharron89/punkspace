@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Edit2, Save, X, User as UserIcon, Heart, Music, Skull, Star, StarOff } from 'lucide-react';
+import { Edit2, Save, X, User as UserIcon, Heart, Music, Skull, Star, StarOff, AlertTriangle, Search } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface ProfileProps {
   currentUser: any;
@@ -15,7 +16,8 @@ export default function Profile({ currentUser }: ProfileProps) {
     bio: '',
     profile_css: '',
     profile_html: '',
-    avatar_url: ''
+    avatar_url: '',
+    profile_song: ''
   });
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,8 @@ export default function Profile({ currentUser }: ProfileProps) {
           bio: data.bio || '',
           profile_css: data.profile_css || '',
           profile_html: data.profile_html || '',
-          avatar_url: data.avatar_url || ''
+          avatar_url: data.avatar_url || '',
+          profile_song: data.profile_song || ''
         });
         setLoading(false);
       });
@@ -85,11 +88,39 @@ export default function Profile({ currentUser }: ProfileProps) {
     }
   };
 
+  const handleToggleBlock = async (action: 'block' | 'unblock') => {
+    if (!currentUser || !user) return;
+    const res = await fetch('/api/friends/block', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blockId: user.id, action })
+    });
+    if (res.ok) {
+      window.location.reload();
+    }
+  };
+
+  const handleResetCSS = async () => {
+    if (!window.confirm('THIS WILL NUKE YOUR CUSTOM CSS. PROCEED?')) return;
+    const res = await fetch('/api/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...editData, profile_css: '' })
+    });
+    if (res.ok) {
+      window.location.reload();
+    }
+  };
+
   if (loading) return <div className="text-centre py-20 font-display text-4xl text-punk-pink animate-pulse">FETCHING SOUL...</div>;
   if (!user) return <div className="text-centre py-20 text-punk-red">USER NOT FOUND IN THE VOID.</div>;
 
   const isOwnProfile = currentUser?.username === username;
-  const isTopFriend = currentUser?.top_friends?.includes(user.id);
+  const topFriends = currentUser?.top_friends ? JSON.parse(currentUser.top_friends) : [];
+  const blockedUsers = currentUser?.blocked_users ? JSON.parse(currentUser.blocked_users) : [];
+  
+  const isTopFriend = topFriends.includes(user.id);
+  const isBlocked = blockedUsers.includes(user.id);
 
   return (
     <div className="profile-container space-y-8">
@@ -103,15 +134,43 @@ export default function Profile({ currentUser }: ProfileProps) {
               alt={user.username}
             />
             {isOwnProfile && (
-              <button 
-                onClick={() => setIsEditing(true)}
-                className="absolute -bottom-4 -right-4 punk-button flex items-center gap-2 bg-punk-yellow text-black"
-              >
-                <Edit2 size={16} /> EDIT PROFILE
-              </button>
+              <div className="absolute -bottom-12 left-0 right-0 flex gap-2 justify-centre z-10">
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="punk-button flex items-center gap-2 bg-punk-yellow text-black text-xs py-1"
+                >
+                  <Edit2 size={14} /> EDIT
+                </button>
+                <button 
+                  onClick={handleResetCSS}
+                  className="punk-button flex items-center gap-2 bg-punk-red text-white text-xs py-1"
+                  style={{ position: 'relative', zIndex: 9999 }} // Ensure it's clickable even if CSS is broken
+                >
+                  <AlertTriangle size={14} /> RESET CSS
+                </button>
+              </div>
             )}
           </div>
           
+          {/* Profile Song */}
+          {user.profile_song && (
+            <div className="punk-card border-punk-pink p-2 bg-black/40">
+              <h3 className="text-xs text-punk-pink mb-2 flex items-center gap-2 uppercase tracking-widest font-bold">
+                <Music size={14} /> Now Playing
+              </h3>
+              <div className="aspect-video w-full max-h-[120px] overflow-hidden">
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  src={user.profile_song.includes('youtube.com') ? user.profile_song.replace('watch?v=', 'embed/') : user.profile_song} 
+                  frameBorder="0" 
+                  allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+          )}
+
           <div className="punk-card bg-zinc-800">
             <h3 className="text-xl text-punk-cyan mb-2 flex items-center gap-2"><Heart size={18} /> CONTACTING</h3>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -125,7 +184,14 @@ export default function Profile({ currentUser }: ProfileProps) {
                 </button>
               )}
               <button className="punk-button py-1 text-[10px] bg-punk-yellow">INSTANT MSG</button>
-              <button className="punk-button py-1 text-[10px] bg-punk-red">BLOCK USER</button>
+              {!isOwnProfile && currentUser && (
+                <button 
+                  onClick={() => handleToggleBlock(isBlocked ? 'unblock' : 'block')}
+                  className={`punk-button py-1 text-[10px] bg-punk-red ${isBlocked ? 'opacity-50' : ''}`}
+                >
+                  {isBlocked ? 'UNBLOCK USER' : 'BLOCK USER'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -141,7 +207,10 @@ export default function Profile({ currentUser }: ProfileProps) {
 
           {/* Custom HTML Area */}
           {user.profile_html && (
-            <div className="custom-html-area" dangerouslySetInnerHTML={{ __html: user.profile_html }} />
+            <div 
+              className="custom-html-area punk-card border-dashed border-zinc-700" 
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(user.profile_html) }} 
+            />
           )}
 
           <div className="punk-card">
@@ -201,6 +270,17 @@ export default function Profile({ currentUser }: ProfileProps) {
                     value={editData.bio}
                     onChange={e => setEditData({...editData, bio: e.target.value})}
                   />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-punk-cyan font-bold">PROFILE SONG (EMBED URL)</label>
+                  <input 
+                    type="text" 
+                    className="punk-input text-sm" 
+                    placeholder="https://www.youtube.com/embed/..."
+                    value={editData.profile_song}
+                    onChange={e => setEditData({...editData, profile_song: e.target.value})}
+                  />
+                  <p className="text-[10px] text-zinc-500 italic">Paste a YouTube embed link or SoundCloud player URL.</p>
                 </div>
               </div>
 
