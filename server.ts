@@ -111,13 +111,19 @@ try {
 `);
 
 // Seed default rooms
-const rooms = db.prepare('SELECT * FROM rooms').all();
-if (rooms.length === 0) {
-  db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('General', 'The main lobby for everyone.');
-  db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Music', 'Share your favourite tunes and bands.');
-  db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Art', 'Show off your creations.');
-  db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Anarchy', 'No rules, just chaos.');
-  }
+const defaultRooms = [
+  ['General', 'The main lobby for everyone.'],
+  ['Music', 'Share your favourite tunes and bands.'],
+  ['Art', 'Show off your creations.'],
+  ['Anarchy', 'No rules, just chaos.'],
+  ['Video Games', 'Retro, indie, and underground gaming.'],
+  ['Tattoos', 'Ink, art, and body modification.'],
+  ['Movies', 'Cult classics and horror flicks.']
+];
+
+for (const [name, desc] of defaultRooms) {
+  db.prepare('INSERT OR IGNORE INTO rooms (name, description) VALUES (?, ?)').run(name, desc);
+}
 } catch (err) {
   console.error('CRITICAL: Database initialization failed!');
   console.error('Error details:', err);
@@ -165,7 +171,12 @@ app.post('/api/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword);
-    res.cookie('userId', result.lastInsertRowid.toString(), { httpOnly: true, sameSite: 'none', secure: true });
+    res.cookie('userId', result.lastInsertRowid.toString(), { 
+      httpOnly: true, 
+      sameSite: 'none', 
+      secure: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
     res.json({ id: result.lastInsertRowid, username });
   } catch (e) {
     res.status(400).json({ error: 'Username already exists' });
@@ -176,7 +187,12 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
   if (user && await bcrypt.compare(password, user.password)) {
-    res.cookie('userId', user.id.toString(), { httpOnly: true, sameSite: 'none', secure: true });
+    res.cookie('userId', user.id.toString(), { 
+      httpOnly: true, 
+      sameSite: 'none', 
+      secure: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
     res.json({ id: user.id, username: user.username });
   } else {
     res.status(401).json({ error: 'Invalid credentials' });

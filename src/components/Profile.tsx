@@ -133,24 +133,24 @@ export default function Profile({ currentUser }: ProfileProps) {
               className="w-full aspect-square border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,255,255,1)]"
               alt={user.username}
             />
-            {isOwnProfile && (
-              <div className="absolute -bottom-12 left-0 right-0 flex gap-2 justify-centre z-10">
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="punk-button flex items-center gap-2 bg-punk-yellow text-black text-xs py-1"
-                >
-                  <Edit2 size={14} /> EDIT
-                </button>
-                <button 
-                  onClick={handleResetCSS}
-                  className="punk-button flex items-center gap-2 bg-punk-red text-white text-xs py-1"
-                  style={{ position: 'relative', zIndex: 9999 }} // Ensure it's clickable even if CSS is broken
-                >
-                  <AlertTriangle size={14} /> RESET CSS
-                </button>
-              </div>
-            )}
           </div>
+
+          {isOwnProfile && (
+            <div className="flex flex-col gap-2 w-full">
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="punk-button flex items-center justify-center gap-2 bg-punk-yellow text-black w-full"
+              >
+                <Edit2 size={16} /> EDIT PROFILE
+              </button>
+              <button 
+                onClick={handleResetCSS}
+                className="punk-button flex items-center justify-center gap-2 bg-punk-red text-white w-full"
+              >
+                <AlertTriangle size={16} /> RESET PROFILE CSS
+              </button>
+            </div>
+          )}
           
           {/* Profile Song */}
           {user.profile_song && (
