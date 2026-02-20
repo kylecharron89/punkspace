@@ -39,16 +39,24 @@ if (fs.existsSync(DB_PATH)) {
 }
 
 let db: Database.Database;
-try {
-  db = new Database(DB_PATH);
-  console.log(`Connected to database at ${DB_PATH}`);
-} catch (err) {
-  console.error('Failed to open database. It might be corrupted. Deleting and retrying...', err);
-  if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
-  db = new Database(DB_PATH);
+
+function initDb() {
+  try {
+    const instance = new Database(DB_PATH);
+    // Test if it's actually a database by running a simple command
+    instance.pragma('journal_mode = WAL');
+    return instance;
+  } catch (err) {
+    console.error(`CRITICAL: Database at ${DB_PATH} is invalid or corrupted. Deleting...`);
+    if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+    return new Database(DB_PATH);
+  }
 }
 
-// Initialize Database
+db = initDb();
+console.log(`Connected to database at ${DB_PATH}`);
+
+// Initialize Database Schema
 try {
   db.exec(`
   CREATE TABLE IF NOT EXISTS users (
