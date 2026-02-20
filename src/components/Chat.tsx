@@ -95,7 +95,7 @@ export default function Chat({ user }: ChatProps) {
     <div className="flex flex-col md:flex-row h-[calc(100vh-200px)] gap-4">
       {/* Rooms Sidebar */}
       <div className="w-full md:w-64 punk-card flex flex-col gap-4 overflow-y-auto">
-        <h3 className="text-2xl text-punk-cyan border-b border-punk-cyan pb-2 flex items-center gap-2">
+        <h3 className="text-2xl text-punk-cyan border-b border-punk-cyan pb-2 flex items-centre gap-2">
           <Hash size={20} /> ROOMS
         </h3>
         <div className="flex flex-col gap-2">
@@ -118,7 +118,7 @@ export default function Chat({ user }: ChatProps) {
       {/* Chat Area */}
       <div className="flex-grow punk-card flex flex-col p-0 overflow-hidden">
         {/* Chat Header */}
-        <div className="p-4 border-b border-punk-pink bg-zinc-800 flex justify-between items-center">
+        <div className="p-4 border-b border-punk-pink bg-zinc-800 flex justify-between items-centre">
           <h3 className="text-xl text-punk-pink font-bold">
             {activeRoom ? `# ${activeRoom.name}` : 'SELECT A ROOM'}
           </h3>
@@ -140,7 +140,7 @@ export default function Chat({ user }: ChatProps) {
                 alt={msg.username}
               />
               <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+                <div className="flex items-centre gap-2">
                   <span className="font-bold text-punk-cyan text-sm">{msg.username}</span>
                   <span className="text-[10px] text-zinc-600">{new Date(msg.timestamp).toLocaleTimeString()}</span>
                 </div>

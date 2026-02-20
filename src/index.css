@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=VT323&family=Creepster&display=swap');
+@import "tailwindcss";
 
 @theme {
   --font-sans: "Space Mono", ui-sans-serif, system-ui, sans-serif;
@@ -57,8 +57,14 @@
   .blink {
     @apply animate-pulse;
   }
-}
 
+  .markdown-body h1 { @apply text-3xl font-bold mb-4 text-punk-pink; }
+  .markdown-body h2 { @apply text-2xl font-bold mb-3 text-punk-cyan; }
+  .markdown-body p { @apply mb-4 leading-relaxed; }
+  .markdown-body ul { @apply list-disc ml-6 mb-4; }
+  .markdown-body blockquote { @apply border-l-4 border-punk-pink pl-4 italic my-4 text-zinc-400; }
+  .markdown-body code { @apply bg-zinc-800 px-1 rounded text-punk-green; }
+}
 
 /* MySpace style scrollbar */
 ::-webkit-scrollbar {
@@ -74,12 +80,6 @@
   border: 2px solid #000;
 }
 
-.markdown-body h1 { @apply text-3xl font-bold mb-4 text-punk-pink; }
-.markdown-body h2 { @apply text-2xl font-bold mb-3 text-punk-cyan; }
-.markdown-body p { @apply mb-4 leading-relaxed; }
-.markdown-body ul { @apply list-disc ml-6 mb-4; }
-.markdown-body blockquote { @apply border-l-4 border-punk-pink pl-4 italic my-4 text-zinc-400; }
-.markdown-body code { @apply bg-zinc-800 px-1 rounded text-punk-green; }
 
 /* Glitch Effect */
 .glitch {

@@ -80,6 +80,9 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
+// Track online users
+const onlineUsers = new Map<string, number>(); // socketId -> userId
+
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
@@ -145,7 +148,43 @@ app.get('/api/me', (req, res) => {
 app.get('/api/users/:username', (req, res) => {
   const user: any = db.prepare('SELECT id, username, avatar_url, bio, profile_css, profile_html, top_friends, created_at FROM users WHERE username = ?').get(req.params.username);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json(user);
+  
+  // Fetch actual user data for top friends
+  let topFriendsData = [];
+  if (user.top_friends) {
+    try {
+      const ids = JSON.parse(user.top_friends);
+      if (ids.length > 0) {
+        topFriendsData = db.prepare(`
+          SELECT id, username, avatar_url 
+          FROM users 
+          WHERE id IN (${ids.map(() => '?').join(',')})
+        `).all(...ids);
+      }
+    } catch (e) {
+      console.error("Error parsing top friends", e);
+    }
+  }
+  
+  res.json({ ...user, top_friends_data: topFriendsData });
+});
+
+app.post('/api/friends/top', authenticate, (req: any, res) => {
+  const { friendId, action } = req.body; // action: 'add' or 'remove'
+  const user: any = db.prepare('SELECT top_friends FROM users WHERE id = ?').get(req.userId);
+  let friends = user.top_friends ? JSON.parse(user.top_friends) : [];
+  
+  if (action === 'add') {
+    if (!friends.includes(friendId)) {
+      friends.push(friendId);
+      if (friends.length > 8) friends.shift(); // Limit to top 8
+    }
+  } else {
+    friends = friends.filter((id: number) => id !== friendId);
+  }
+  
+  db.prepare('UPDATE users SET top_friends = ? WHERE id = ?').run(JSON.stringify(friends), req.userId);
+  res.json({ success: true, friends });
 });
 
 app.put('/api/profile', authenticate, (req: any, res) => {
@@ -228,9 +267,39 @@ app.post('/api/upload', authenticate, upload.single('file'), (req: any, res) => 
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
+// Stats & Social
+app.get('/api/stats/online', (req, res) => {
+  const userIds = Array.from(new Set(onlineUsers.values()));
+  if (userIds.length === 0) return res.json([]);
+  
+  const users = db.prepare(`
+    SELECT id, username, avatar_url 
+    FROM users 
+    WHERE id IN (${userIds.map(() => '?').join(',')})
+  `).all(...userIds);
+  res.json(users);
+});
+
+app.get('/api/stats/punk-of-the-day', (req, res) => {
+  // Use the current date as a seed for randomness
+  const dateStr = new Date().toISOString().split('T')[0];
+  const seed = dateStr.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+  
+  const allUsers = db.prepare('SELECT id, username, avatar_url, bio FROM users').all();
+  if (allUsers.length === 0) return res.json(null);
+  
+  const index = seed % allUsers.length;
+  res.json(allUsers[index]);
+});
+
 // --- Socket.io ---
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+
+  socket.on('authenticate', (userId) => {
+    onlineUsers.set(socket.id, userId);
+    io.emit('online_count_update', Array.from(new Set(onlineUsers.values())).length);
+  });
 
   socket.on('join_room', (roomId) => {
     socket.join(`room_${roomId}`);
@@ -257,6 +326,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    onlineUsers.delete(socket.id);
+    io.emit('online_count_update', Array.from(new Set(onlineUsers.values())).length);
     console.log('User disconnected:', socket.id);
   });
 });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Edit2, Save, X, User as UserIcon, Heart, Music, Skull } from 'lucide-react';
+import { Edit2, Save, X, User as UserIcon, Heart, Music, Skull, Star, StarOff } from 'lucide-react';
 
 interface ProfileProps {
   currentUser: any;
@@ -20,6 +20,10 @@ export default function Profile({ currentUser }: ProfileProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetchUser();
+  }, [username]);
+
+  const fetchUser = () => {
     setLoading(true);
     fetch(`/api/users/${username}`)
       .then(res => res.json())
@@ -33,7 +37,7 @@ export default function Profile({ currentUser }: ProfileProps) {
         });
         setLoading(false);
       });
-  }, [username]);
+  };
 
   // Inject custom CSS
   useEffect(() => {
@@ -61,28 +65,42 @@ export default function Profile({ currentUser }: ProfileProps) {
     }
   };
 
-  if (loading) return <div className="text-center py-20 font-display text-4xl text-punk-pink animate-pulse">FETCHING SOUL...</div>;
-  if (!user) return <div className="text-center py-20 text-punk-red">USER NOT FOUND IN THE VOID.</div>;
+  const handleToggleTopFriend = async (action: 'add' | 'remove') => {
+    if (!currentUser || !user) return;
+    const res = await fetch('/api/friends/top', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ friendId: user.id, action })
+    });
+    if (res.ok) {
+      // Refresh to show updated top friends if viewing own profile or just for feedback
+      fetchUser();
+    }
+  };
+
+  if (loading) return <div className="text-centre py-20 font-display text-4xl text-punk-pink animate-pulse">FETCHING SOUL...</div>;
+  if (!user) return <div className="text-centre py-20 text-punk-red">USER NOT FOUND IN THE VOID.</div>;
 
   const isOwnProfile = currentUser?.username === username;
+  const isTopFriend = currentUser?.top_friends?.includes(user.id);
 
   return (
     <div className="profile-container space-y-8">
       {/* Profile Header */}
       <div className="flex flex-col md:flex-row gap-8 items-start">
         <div className="w-full md:w-1/3 space-y-4">
-          <div className="punk-card relative group">
+          <div className="punk-card relative group border-punk-cyan">
             <img 
               src={user.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.username}`} 
-              className="w-full aspect-square border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,0,255,1)]"
+              className="w-full aspect-square border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,255,255,1)]"
               alt={user.username}
             />
             {isOwnProfile && (
               <button 
                 onClick={() => setIsEditing(true)}
-                className="absolute top-2 right-2 punk-button p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -bottom-4 -right-4 punk-button flex items-center gap-2 bg-punk-yellow text-black"
               >
-                <Edit2 size={16} />
+                <Edit2 size={16} /> EDIT PROFILE
               </button>
             )}
           </div>
@@ -91,7 +109,14 @@ export default function Profile({ currentUser }: ProfileProps) {
             <h3 className="text-xl text-punk-cyan mb-2 flex items-center gap-2"><Heart size={18} /> CONTACTING</h3>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button className="punk-button py-1 text-[10px]">SEND MESSAGE</button>
-              <button className="punk-button py-1 text-[10px] bg-punk-cyan">ADD FRIEND</button>
+              {!isOwnProfile && currentUser && (
+                <button 
+                  onClick={() => handleToggleTopFriend(isTopFriend ? 'remove' : 'add')}
+                  className={`punk-button py-1 text-[10px] flex items-center justify-centre gap-1 ${isTopFriend ? 'bg-punk-red' : 'bg-punk-cyan'}`}
+                >
+                  {isTopFriend ? <><StarOff size={12}/> REMOVE TOP</> : <><Star size={12}/> ADD TO TOP</>}
+                </button>
+              )}
               <button className="punk-button py-1 text-[10px] bg-punk-yellow">INSTANT MSG</button>
               <button className="punk-button py-1 text-[10px] bg-punk-red">BLOCK USER</button>
             </div>
@@ -114,16 +139,25 @@ export default function Profile({ currentUser }: ProfileProps) {
 
           <div className="punk-card">
             <h3 className="text-2xl text-punk-yellow mb-4 flex items-center gap-2"><Music size={24} /> TOP FRIENDS</h3>
-            <div className="grid grid-cols-4 gap-4">
-              {/* Mock top friends for now */}
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <div className="w-16 h-16 border-2 border-punk-pink overflow-hidden">
-                    <img src={`https://picsum.photos/seed/${i+10}/100/100`} alt="friend" />
-                  </div>
-                  <span className="text-[10px] text-zinc-400">ANARCHIST_{i}</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {user.top_friends_data && user.top_friends_data.length > 0 ? (
+                user.top_friends_data.map((friend: any) => (
+                  <Link key={friend.id} to={`/profile/${friend.username}`} className="flex flex-col items-center gap-1 group">
+                    <div className="w-20 h-20 border-2 border-punk-pink overflow-hidden group-hover:border-white transition-colors">
+                      <img 
+                        src={friend.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${friend.username}`} 
+                        alt={friend.username} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-[10px] text-zinc-400 group-hover:text-punk-pink">{friend.username}</span>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-4 text-centre py-4 text-zinc-600 italic">
+                  This punk is a lone wolf. No top friends yet.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -131,13 +165,13 @@ export default function Profile({ currentUser }: ProfileProps) {
 
       {/* Edit Modal */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-centre p-4">
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="punk-card w-full max-w-4xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-centre mb-6">
               <h2 className="text-3xl text-punk-pink">EDIT YOUR SOUL</h2>
               <button onClick={() => setIsEditing(false)} className="text-zinc-500 hover:text-white"><X size={32} /></button>
             </div>
@@ -165,7 +199,7 @@ export default function Profile({ currentUser }: ProfileProps) {
 
               <div className="space-y-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-punk-pink font-bold">CUSTOM CSS (BE CAREFUL)</label>
+                  <label className="text-xs text-punk-pink font-bold">CUSTOM CSS (COLOURS, FONTS, ETC)</label>
                   <textarea 
                     className="punk-input text-xs font-mono h-32" 
                     placeholder="body { background: red; }"

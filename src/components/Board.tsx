@@ -43,12 +43,12 @@ export default function Board({ user }: BoardProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-centre">
         <h2 className="text-4xl text-punk-yellow">MESSAGE BOARD</h2>
         {user && (
           <button 
             onClick={() => setIsCreating(!isCreating)}
-            className="punk-button flex items-center gap-2"
+            className="punk-button flex items-centre gap-2"
           >
             {isCreating ? 'CANCEL' : <><Plus size={20} /> NEW POST</>}
           </button>
@@ -98,11 +98,11 @@ export default function Board({ user }: BoardProps) {
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-2xl text-punk-cyan group-hover:text-white transition-colors">{post.title}</h3>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
-                    <span className="flex items-center gap-1"><UserIcon size={12} /> {post.username}</span>
-                    <span className="flex items-center gap-1"><Clock size={12} /> {new Date(post.timestamp).toLocaleDateString()}</span>
-                    <span className="flex items-center gap-1 text-punk-pink"><MessageSquare size={12} /> {post.comment_count} COMMENTS</span>
+                  <h3 className="text-2xl text-punk-cyan group-hover:text-white transition-colours">{post.title}</h3>
+                  <div className="flex items-centre gap-4 mt-2 text-xs text-zinc-500">
+                    <span className="flex items-centre gap-1"><UserIcon size={12} /> {post.username}</span>
+                    <span className="flex items-centre gap-1"><Clock size={12} /> {new Date(post.timestamp).toLocaleDateString()}</span>
+                    <span className="flex items-centre gap-1 text-punk-pink"><MessageSquare size={12} /> {post.comment_count} COMMENTS</span>
                   </div>
                 </div>
                 <div className="hidden md:block">

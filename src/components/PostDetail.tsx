@@ -48,12 +48,12 @@ export default function PostDetail({ user }: PostDetailProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <Link to="/board" className="flex items-center gap-2 text-punk-pink hover:text-white transition-colors">
+      <Link to="/board" className="flex items-centre gap-2 text-punk-pink hover:text-white transition-colours">
         <ArrowLeft size={20} /> BACK TO BOARD
       </Link>
 
       <div className="punk-card border-punk-cyan">
-        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-800">
+        <div className="flex items-centre gap-4 mb-6 pb-4 border-b border-zinc-800">
           <img 
             src={post.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${post.username}`} 
             className="w-16 h-16 border-2 border-punk-cyan"
@@ -73,7 +73,7 @@ export default function PostDetail({ user }: PostDetailProps) {
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-2xl text-punk-pink flex items-center gap-2"><MessageSquare size={24} /> COMMENTS</h3>
+        <h3 className="text-2xl text-punk-pink flex items-centre gap-2"><MessageSquare size={24} /> COMMENTS</h3>
         
         {user && (
           <form onSubmit={handleAddComment} className="punk-card flex gap-2">
@@ -103,7 +103,7 @@ export default function PostDetail({ user }: PostDetailProps) {
                   alt={c.username}
                 />
                 <div className="flex-grow">
-                  <div className="flex justify-between items-center mb-1">
+                  <div className="flex justify-between items-centre mb-1">
                     <Link to={`/profile/${c.username}`} className="font-bold text-punk-cyan text-sm hover:underline">{c.username}</Link>
                     <span className="text-[10px] text-zinc-600">{new Date(c.timestamp).toLocaleString()}</span>
                   </div>
