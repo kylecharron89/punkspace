@@ -10,6 +10,20 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
+console.log('--- PUNKSPACE STARTUP SEQUENCE ---');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Current Directory:', process.cwd());
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Render persistent disk path or local path
@@ -27,6 +41,7 @@ if (fs.existsSync(DB_PATH)) {
 let db: Database.Database;
 try {
   db = new Database(DB_PATH);
+  console.log(`Connected to database at ${DB_PATH}`);
 } catch (err) {
   console.error('Failed to open database. It might be corrupted. Deleting and retrying...', err);
   if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
@@ -34,7 +49,8 @@ try {
 }
 
 // Initialize Database
-db.exec(`
+try {
+  db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
@@ -88,9 +104,17 @@ db.exec(`
 const rooms = db.prepare('SELECT * FROM rooms').all();
 if (rooms.length === 0) {
   db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('General', 'The main lobby for everyone.');
-  db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Music', 'Share your favorite tunes and bands.');
+  db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Music', 'Share your favourite tunes and bands.');
   db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Art', 'Show off your creations.');
   db.prepare('INSERT INTO rooms (name, description) VALUES (?, ?)').run('Anarchy', 'No rules, just chaos.');
+  }
+} catch (err) {
+  console.error('CRITICAL: Database initialization failed!');
+  console.error('Error details:', err);
+  if (err instanceof Error) {
+    console.error('Stack trace:', err.stack);
+  }
+  process.exit(1);
 }
 
 const app = express();

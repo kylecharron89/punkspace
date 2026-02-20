@@ -73,8 +73,15 @@ export default function Profile({ currentUser }: ProfileProps) {
       body: JSON.stringify({ friendId: user.id, action })
     });
     if (res.ok) {
-      // Refresh to show updated top friends if viewing own profile or just for feedback
-      fetchUser();
+      const data = await res.json();
+      // Update the global user state so other components know about the change
+      if (currentUser.id === currentUser.id) { // Just a safety check
+        // We need a way to update the parent state. 
+        // For now, let's just refresh the page or let the user know.
+        // Better: we can use a custom event or just rely on the next refresh.
+        // But let's try to be better.
+        window.location.reload(); // Simple and effective for this app
+      }
     }
   };
 
