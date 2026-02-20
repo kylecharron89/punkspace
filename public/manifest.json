@@ -1,0 +1,21 @@
+{
+  "name": "PunkSpace",
+  "short_name": "PunkSpace",
+  "description": "Punk-rock MySpace for you and your friends.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ff00ff",
+  "icons": [
+    {
+      "src": "https://picsum.photos/id/10/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/id/10/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

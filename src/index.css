@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=VT323&family=Creepster&display=swap');
+
+@theme {
+  --font-sans: "Space Mono", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Creepster", cursive;
+  --font-mono: "VT323", monospace;
+  
+  --color-punk-pink: #ff00ff;
+  --color-punk-cyan: #00ffff;
+  --color-punk-yellow: #ffff00;
+  --color-punk-green: #00ff00;
+  --color-punk-red: #ff0000;
+
+  --animate-marquee: marquee 15s linear infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white font-sans;
+    background-image: radial-gradient(#333 1px, transparent 1px);
+    background-size: 20px 20px;
+    cursor: url('https://cur.cursors-4u.net/games/gam-4/gam372.cur'), auto;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-wider;
+  }
+}
+
+@layer components {
+  .punk-card {
+    @apply bg-zinc-900 border-2 border-punk-pink p-4 shadow-[4px_4px_0px_0px_rgba(255,0,255,1)];
+  }
+
+  .punk-button {
+    @apply bg-punk-pink text-black font-bold px-4 py-2 border-2 border-white hover:bg-white hover:text-punk-pink transition-all active:translate-x-1 active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(255,255,255,1)];
+  }
+
+  .punk-input {
+    @apply bg-black border-2 border-punk-cyan p-2 text-punk-cyan focus:outline-none focus:border-punk-yellow;
+  }
+
+  .marquee {
+    @apply overflow-hidden whitespace-nowrap;
+  }
+
+  .marquee span {
+    @apply inline-block pl-[100%] animate-marquee;
+  }
+
+  .blink {
+    @apply animate-pulse;
+  }
+}
+
+
+/* MySpace style scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff00ff;
+  border: 2px solid #000;
+}
+
+.markdown-body h1 { @apply text-3xl font-bold mb-4 text-punk-pink; }
+.markdown-body h2 { @apply text-2xl font-bold mb-3 text-punk-cyan; }
+.markdown-body p { @apply mb-4 leading-relaxed; }
+.markdown-body ul { @apply list-disc ml-6 mb-4; }
+.markdown-body blockquote { @apply border-l-4 border-punk-pink pl-4 italic my-4 text-zinc-400; }
+.markdown-body code { @apply bg-zinc-800 px-1 rounded text-punk-green; }
+
+/* Glitch Effect */
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 #ff00ff;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim 5s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 #00ffff;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim2 5s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% { clip: rect(31px, 9999px, 94px, 0); }
+  20% { clip: rect(62px, 9999px, 42px, 0); }
+  40% { clip: rect(16px, 9999px, 78px, 0); }
+  60% { clip: rect(87px, 9999px, 12px, 0); }
+  80% { clip: rect(53px, 9999px, 66px, 0); }
+  100% { clip: rect(9px, 9999px, 35px, 0); }
+}
+
+@keyframes glitch-anim2 {
+  0% { clip: rect(65px, 9999px, 100px, 0); }
+  20% { clip: rect(12px, 9999px, 58px, 0); }
+  40% { clip: rect(94px, 9999px, 23px, 0); }
+  60% { clip: rect(41px, 9999px, 87px, 0); }
+  80% { clip: rect(28px, 9999px, 15px, 0); }
+  100% { clip: rect(76px, 9999px, 49px, 0); }
+}
+
+
