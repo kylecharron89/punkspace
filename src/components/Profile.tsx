@@ -135,7 +135,7 @@ export default function Profile({ currentUser }: ProfileProps) {
             />
           </div>
 
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <div className="flex flex-col gap-2 w-full">
               <button 
                 onClick={() => setIsEditing(true)}
@@ -148,6 +148,21 @@ export default function Profile({ currentUser }: ProfileProps) {
                 className="punk-button flex items-center justify-center gap-2 bg-punk-red text-white w-full"
               >
                 <AlertTriangle size={16} /> RESET PROFILE CSS
+              </button>
+            </div>
+          ) : currentUser && (
+            <div className="flex flex-col gap-2 w-full">
+              <button 
+                onClick={() => handleToggleTopFriend(isTopFriend ? 'remove' : 'add')}
+                className={`punk-button flex items-center justify-center gap-2 w-full ${isTopFriend ? 'bg-punk-red' : 'bg-punk-cyan'}`}
+              >
+                {isTopFriend ? <><StarOff size={18}/> REMOVE FROM TOP FRIENDS</> : <><Star size={18}/> ADD TO TOP FRIENDS</>}
+              </button>
+              <button 
+                onClick={() => handleToggleBlock(isBlocked ? 'unblock' : 'block')}
+                className={`punk-button flex items-center justify-center gap-2 w-full bg-punk-red ${isBlocked ? 'opacity-50' : ''}`}
+              >
+                {isBlocked ? <><Skull size={18}/> UNBLOCK USER</> : <><Skull size={18}/> BLOCK USER</>}
               </button>
             </div>
           )}
@@ -170,30 +185,6 @@ export default function Profile({ currentUser }: ProfileProps) {
               </div>
             </div>
           )}
-
-          <div className="punk-card bg-zinc-800">
-            <h3 className="text-xl text-punk-cyan mb-2 flex items-center gap-2"><Heart size={18} /> CONTACTING</h3>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button className="punk-button py-1 text-[10px]">SEND MESSAGE</button>
-              {!isOwnProfile && currentUser && (
-                <button 
-                  onClick={() => handleToggleTopFriend(isTopFriend ? 'remove' : 'add')}
-                  className={`punk-button py-1 text-[10px] flex items-center justify-centre gap-1 ${isTopFriend ? 'bg-punk-red' : 'bg-punk-cyan'}`}
-                >
-                  {isTopFriend ? <><StarOff size={12}/> REMOVE TOP</> : <><Star size={12}/> ADD TO TOP</>}
-                </button>
-              )}
-              <button className="punk-button py-1 text-[10px] bg-punk-yellow">INSTANT MSG</button>
-              {!isOwnProfile && currentUser && (
-                <button 
-                  onClick={() => handleToggleBlock(isBlocked ? 'unblock' : 'block')}
-                  className={`punk-button py-1 text-[10px] bg-punk-red ${isBlocked ? 'opacity-50' : ''}`}
-                >
-                  {isBlocked ? 'UNBLOCK USER' : 'BLOCK USER'}
-                </button>
-              )}
-            </div>
-          </div>
         </div>
 
         <div className="w-full md:w-2/3 space-y-6">
