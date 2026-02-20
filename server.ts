@@ -14,7 +14,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Render persistent disk path or local path
 const DB_PATH = fs.existsSync('/data') ? '/data/punkspace.db' : 'punkspace.db';
-const db = new Database(DB_PATH);
+
+// Resilience: If the file exists but is 0 bytes or corrupted, delete it so we can start fresh
+if (fs.existsSync(DB_PATH)) {
+  const stats = fs.statSync(DB_PATH);
+  if (stats.size === 0) {
+    console.log('Empty database file detected. Deleting to start fresh...');
+    fs.unlinkSync(DB_PATH);
+  }
+}
+
+let db: Database.Database;
+try {
+  db = new Database(DB_PATH);
+} catch (err) {
+  console.error('Failed to open database. It might be corrupted. Deleting and retrying...', err);
+  if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+  db = new Database(DB_PATH);
+}
 
 // Initialize Database
 db.exec(`
